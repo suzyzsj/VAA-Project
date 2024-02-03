@@ -1,0 +1,54 @@
+@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,300;1,400&family=Tilt+Neon&display=swap');
+
+// Colors
+$slate-green: #808B96;
+$dark-blue: #163759;
+$eggshell: #F8F3E6;
+$gray: #64605f;
+$light-gray: #2E4053;
+$blue: #4d5887;
+$pale-green: #C3F4DD;
+$orange: #FCD073;
+$salmon:  #D86171;
+
+// Base document colors
+$navbar-bg: $slate-green; // navbar
+$navbar-fg: $light-gray; // navbar foreground elements
+$navbar-hl: $eggshell; // highlight color when hovering over navbar links
+$body-bg: $light-gray; // page background 
+$body-color: #FFFFFF; // page text changed to white
+$footer-bg: $light-gray; // footer 
+$link-color: $slate-green; // hyperlinks 
+
+// fonts
+$font-family: 'Tilt Neon', cursive;
+
+//toc 
+$toc-font-size: 14px;
+$toc-active-border: $salmon;
+
+/*-- scss:rules --*/
+
+.title {
+  margin-top: 2em !important;
+  margin-bottom: 1.5em;
+  font-size: 28px;
+  font-family: $font-family;
+  font-weight: 500;
+  color: #FFFFFF; // Set title color to white
+}
+
+body {
+  font-size: 14px;
+  font-family: $font-family;
+  color: #FFFFFF; // Set body text color to white
+}
+
+.left, .right, h1, h2, h3 {
+  color: #FFFFFF; // Set text color to white for these elements
+}
+
+.callout.callout-style-default .callout-body {
+  font-size: 0.75rem;
+  color: #FFFFFF; // Set callout body text color to white
+}

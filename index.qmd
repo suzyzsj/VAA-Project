@@ -1,11 +1,7 @@
 ---
-title: "VAA-Projectddd"
+title: " "
+toc: false
+format:
+  html:
+    css: landing.css
 ---
-
-This is a Quarto website.
-
-To learn more about Quarto websites visit <https://quarto.org/docs/websites>.
-
-```{r}
-1 + 1
-```

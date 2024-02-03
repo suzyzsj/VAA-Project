@@ -1,0 +1,10 @@
+body {
+  /* 添加背景图片，并在其上添加一个半透明的白色蒙版 */
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)),
+    url("images/back2.jpg");
+  min-height: 500px;
+  background-position: right top;
+  background-repeat: no-repeat;
+  background-size: cover;
+}

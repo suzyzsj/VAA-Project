@@ -1,0 +1,51 @@
+---
+title: "VAST Mini-Challenge 3: Proposal"
+title-block-banner: true
+toc: true
+---
+
+<font size = "6"> **Fishy Business**</font>
+
+# {{< fa fish-fins >}} Project Overview
+
+FishEye International, a non-profit focused on countering illegal, unreported, and unregulated (IUU) fishing, has been given access to an international finance corporation's database on fishing related companies. In the past, FishEye has determined that companies with anomalous structures are far more likely to be involved in IUU (or other "fishy" business). FishEye has transformed the database into a knowledge graph. It includes information about companies, owners, workers, and financial status. FishEye is aiming to use this graph to identify anomalies that could indicate a company is involved in IUU.
+
+FishEye analysts have attempted to use traditional node-link visualizations and standard graph analyses, but these were found to be ineffective because the scale and detail in the data can obscure a business's true structure. Can you help FishEye develop a new visual analytics approach to better understand fishing business anomalies?
+
+# {{< fa fish-fins >}} Project Objectives
+
+This study aims to address the following tasks in sequence:
+
+-   **1: Identify anomalies** in the business groups present in the knowledge graph
+-   **2: Develop a visual analytics process to find similar businesses and group them**, focusing on a business's most important features and present those features clearly to the user.
+-   **3: Measure similarity of businesses that you group in task 2**, and express confidence in your groupings visually
+-   **4: Provide evidence for or against the case that anomalous companies are involved in illegal fishing,** based on analysis in tasks 1-3, and suggest Which business groups FishEye should investigate further.
+
+# {{< fa fish-fins >}} Proposed Methodology
+
+```{mermaid}
+%%| fig-width: 8
+flowchart LR
+  A{Task 1:\nIdentify\nAnomalies} -->|patterns?|B[products or\nservices]
+  A -->|suspicious?|C[revenue]
+  A -->|abnormal?|D[links]
+  A -.- E{Task 2:\nGrouping} -.- I{Tasks 3&4}
+  E -->|overlaps?|F(Company Contacts)
+  E -->|overlaps?|G(Beneficial Owners)
+  E -->|similarities?|H(Country)
+  E -->|similarities?|C
+  E -->|similarities?|B
+  I --> J([Evaluative Metrics])
+```
+
+# {{< fa fish-fins >}} Shiny App
+
+The proposed Shiny App will be an interactive Network Graph visualising different groups of businesses. It will consist of several tabs, highlighing important information related to the tasks:
+
+I. Entities with *Fishy* Data patterns\
+II. Grouping options for the Network, visualised in an interactive Network Graph (visNetwork)\
+III. Proposed Clusters based on user input on clustering criteria\
+IV. Evaluative metrics applied to Network Graph II
+
+
+[link to github repository](https://github.com/haileycsy/VAA-GroupProj)

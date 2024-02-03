@@ -1,0 +1,6 @@
+---
+title: "Project Poster"
+title-block-banner: true
+---
+
+![](FindingNEMO_Poster.png){height=820px}

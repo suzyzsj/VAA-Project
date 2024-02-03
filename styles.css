@@ -1,1 +1,73 @@
 /* css styles */
+@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,300;1,400&family=Tilt+Neon&display=swap');
+
+/* Navbar Logo */
+
+.navbar-brand {
+  font-family: 'Tilt Neon', cursive;
+  font-size: 30px;
+}
+
+.navbar-brand > img {
+  max-height: 60px;
+}
+
+@media (max-width: 1060px) and (min-width: 991.98px) {
+
+#navbarCollapse ul:last-of-type a.nav-link {
+  padding-left: .25em;
+  padding-right: .25em;
+}
+
+.navbar {
+  margin-left: .1em;
+}
+
+}
+
+/* Custom CSS for panel-tabset */
+.panel-tabset {
+  border: 1px solid #F8F3E6; /* Set the outer border color */
+}
+
+/* unselected tabs */
+.panel-tabset .nav-link {
+  border-color: #F8F3E6;
+  color: #64605f;
+}
+
+/* selected tabs */
+.panel-tabset .nav-link.active {
+  border-color: #F8F3E6;
+  color: #4B787D; /* Set the font color for the selected tab */
+}
+
+/* Custom callout boxes */
+
+.fishbox {
+  padding: 1em 1em 1em 3em;
+  margin-bottom: 10px;
+  border: 1.5px solid #163759;
+  border-radius: 10px;
+  font-size: 13px;
+  background: #C3F4DD 5px center/3em no-repeat;
+}
+
+.fish {
+  background-image: url("images/fish.png");
+  background-position: 1em center;
+}
+
+.alertbox {
+  padding: 1em 1em 1em 3em;
+  margin-bottom: 10px;
+  border: 1.5px solid #D86171;
+  border-radius: 10px;
+  font-size: 13px;
+  background: #fad1a7 5px center/3em no-repeat;
+}
+
+.alert {
+  background-image: url("images/alert.png");
+  background-position: 1em center;
+}
