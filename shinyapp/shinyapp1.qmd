@@ -1,11 +1,4 @@
 ---
-title: "Fishy App User Guide"
+title: "User Guide"
 title-block-banner: true
 ---
-
-![](images/page0001.jpg)
-![](images/page0002.jpg)
-![](images/page0003.jpg)
-![](images/page0004.jpg)
-![](images/page0005.jpg)
-![](images/page0006.jpg)
