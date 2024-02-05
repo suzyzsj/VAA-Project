@@ -4,6 +4,41 @@
     "href": "proposal/proposal.html",
     "title": "VAST Mini-Challenge 3: Proposal",
     "section": "",
-    "text": "Fishy Business\n\n Project Overview\nFishEye International, a non-profit focused on countering illegal, unreported, and unregulated (IUU) fishing, has been given access to an international finance corporation’s database on fishing related companies. In the past, FishEye has determined that companies with anomalous structures are far more likely to be involved in IUU (or other “fishy” business). FishEye has transformed the database into a knowledge graph. It includes information about companies, owners, workers, and financial status. FishEye is aiming to use this graph to identify anomalies that could indicate a company is involved in IUU.\nFishEye analysts have attempted to use traditional node-link visualizations and standard graph analyses, but these were found to be ineffective because the scale and detail in the data can obscure a business’s true structure. Can you help FishEye develop a new visual analytics approach to better understand fishing business anomalies?\n\n\n Project Objectives\nThis study aims to address the following tasks in sequence:\n\n1: Identify anomalies in the business groups present in the knowledge graph\n2: Develop a visual analytics process to find similar businesses and group them, focusing on a business’s most important features and present those features clearly to the user.\n3: Measure similarity of businesses that you group in task 2, and express confidence in your groupings visually\n4: Provide evidence for or against the case that anomalous companies are involved in illegal fishing, based on analysis in tasks 1-3, and suggest Which business groups FishEye should investigate further.\n\n\n\n Proposed Methodology\n\n\n\n\nflowchart LR\n  A{Task 1:\\nIdentify\\nAnomalies} --&gt;|patterns?|B[products or\\nservices]\n  A --&gt;|suspicious?|C[revenue]\n  A --&gt;|abnormal?|D[links]\n  A -.- E{Task 2:\\nGrouping} -.- I{Tasks 3&4}\n  E --&gt;|overlaps?|F(Company Contacts)\n  E --&gt;|overlaps?|G(Beneficial Owners)\n  E --&gt;|similarities?|H(Country)\n  E --&gt;|similarities?|C\n  E --&gt;|similarities?|B\n  I --&gt; J([Evaluative Metrics])\n\n\n\n\n\n\n\n Shiny App\nThe proposed Shiny App will be an interactive Network Graph visualising different groups of businesses. It will consist of several tabs, highlighing important information related to the tasks:\nI. Entities with Fishy Data patterns\nII. Grouping options for the Network, visualised in an interactive Network Graph (visNetwork)\nIII. Proposed Clusters based on user input on clustering criteria\nIV. Evaluative metrics applied to Network Graph II\nlink to github repository"
+    "text": "Weather Situation"
+  },
+  {
+    "objectID": "proposal/proposal.html#data-integration-and-management",
+    "href": "proposal/proposal.html#data-integration-and-management",
+    "title": "VAST Mini-Challenge 3: Proposal",
+    "section": "Data Integration and Management",
+    "text": "Data Integration and Management\n\nTo integrate historical and current climate data from reliable sources into a comprehensive database for use in the visualization platform.\nTo ensure data is regularly updated to reflect the latest information and forecasts."
+  },
+  {
+    "objectID": "proposal/proposal.html#visualization-and-user-interface",
+    "href": "proposal/proposal.html#visualization-and-user-interface",
+    "title": "VAST Mini-Challenge 3: Proposal",
+    "section": "Visualization and User Interface",
+    "text": "Visualization and User Interface\n\nTo develop intuitive, interactive visualization tools that accurately present complex climate data, such as temperature trends, precipitation patterns, and sea-level changes.\nTo design a user-friendly interface that enables users of varying expertise to easily navigate and understand climate data."
+  },
+  {
+    "objectID": "proposal/proposal.html#analysis-and-forecasting",
+    "href": "proposal/proposal.html#analysis-and-forecasting",
+    "title": "VAST Mini-Challenge 3: Proposal",
+    "section": "Analysis and Forecasting",
+    "text": "Analysis and Forecasting\n\nTo implement analytical models that use historical data to forecast future climate conditions up to 50 years ahead.\nTo provide scenario analysis features that help users understand the potential impacts of various climate change trajectories."
+  },
+  {
+    "objectID": "proposal/proposal.html#exploratory-data-analysis-eda-by-data-visualization",
+    "href": "proposal/proposal.html#exploratory-data-analysis-eda-by-data-visualization",
+    "title": "VAST Mini-Challenge 3: Proposal",
+    "section": "Exploratory Data Analysis (EDA) by Data Visualization",
+    "text": "Exploratory Data Analysis (EDA) by Data Visualization\nTo facilitate a deeper understanding of climate dynamics, our Exploratory Data Analysis (EDA) will leverage the following visualization concepts:\nVisualization of Uncertainty in Temperature Changes: Using different visualization tool, we’ll explore the distribution and density of temperature variations over the years, highlighting the uncertainty and range of temperature fluctuations.\nMultivariate Analysis of Climate Factors: We aim to dissect the relationships between different climate variables, such as temperature, wind direction, and precipitation, alongside carbon emissions and sea levels, to identify correlations and interactions."
+  },
+  {
+    "objectID": "proposal/proposal.html#predictive-analysis-by-data-visualization",
+    "href": "proposal/proposal.html#predictive-analysis-by-data-visualization",
+    "title": "VAST Mini-Challenge 3: Proposal",
+    "section": "Predictive Analysis by Data Visualization",
+    "text": "Predictive Analysis by Data Visualization\nLeveraging the insights gained from EDA analysis, we will project the climate conditions for the next 50 years. This predictive analysis will focus on\nFuture Temperature Changes: Employing advanced statistical models and visualization techniques, we’ll predict temperature changes, considering factors like carbon emissions and sea levels."
   }
 ]
