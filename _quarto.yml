@@ -6,7 +6,7 @@ website:
   image: "images/333.png"
   favicon: "images/222.png"
   navbar:
-    logo: "images/111.png"
+    logo: "images/444.png"
     title: false
     collapse-below: lg
     search: true
