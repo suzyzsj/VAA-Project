@@ -60,9 +60,6 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
-<script src="../site_libs/quarto-diagram/mermaid.min.js"></script>
-<script src="../site_libs/quarto-diagram/mermaid-init.js"></script>
-<link href="../site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
 
 
 <link rel="stylesheet" href="../styles.css">
@@ -144,10 +141,19 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#fa-fish-fins-project-overview" id="toc-fa-fish-fins-project-overview" class="nav-link active" data-scroll-target="#fa-fish-fins-project-overview"> Project Overview</a></li>
-  <li><a href="#fa-fish-fins-project-objectives" id="toc-fa-fish-fins-project-objectives" class="nav-link" data-scroll-target="#fa-fish-fins-project-objectives"> Project Objectives</a></li>
-  <li><a href="#fa-fish-fins-proposed-methodology" id="toc-fa-fish-fins-proposed-methodology" class="nav-link" data-scroll-target="#fa-fish-fins-proposed-methodology"> Proposed Methodology</a></li>
-  <li><a href="#fa-fish-fins-shiny-app" id="toc-fa-fish-fins-shiny-app" class="nav-link" data-scroll-target="#fa-fish-fins-shiny-app"> Shiny App</a></li>
+  <li><a href="#project-motivation" id="toc-project-motivation" class="nav-link active" data-scroll-target="#project-motivation">🌞Project Motivation</a></li>
+  <li><a href="#project-objectives" id="toc-project-objectives" class="nav-link" data-scroll-target="#project-objectives">☁️Project Objectives</a>
+  <ul class="collapse">
+  <li><a href="#data-integration-and-management" id="toc-data-integration-and-management" class="nav-link" data-scroll-target="#data-integration-and-management"><strong>Data Integration and Management</strong></a></li>
+  <li><a href="#visualization-and-user-interface" id="toc-visualization-and-user-interface" class="nav-link" data-scroll-target="#visualization-and-user-interface"><strong>Visualization and User Interface</strong></a></li>
+  <li><a href="#analysis-and-forecasting" id="toc-analysis-and-forecasting" class="nav-link" data-scroll-target="#analysis-and-forecasting"><strong>Analysis and Forecasting</strong></a></li>
+  </ul></li>
+  <li><a href="#proposed-methodology" id="toc-proposed-methodology" class="nav-link" data-scroll-target="#proposed-methodology">📚Proposed Methodology</a>
+  <ul class="collapse">
+  <li><a href="#exploratory-data-analysis-eda-by-data-visualization" id="toc-exploratory-data-analysis-eda-by-data-visualization" class="nav-link" data-scroll-target="#exploratory-data-analysis-eda-by-data-visualization">Exploratory Data Analysis (EDA) by Data Visualization</a></li>
+  <li><a href="#predictive-analysis-by-data-visualization" id="toc-predictive-analysis-by-data-visualization" class="nav-link" data-scroll-target="#predictive-analysis-by-data-visualization">Predictive Analysis by Data Visualization</a></li>
+  </ul></li>
+  <li><a href="#shiny-app-storyboard" id="toc-shiny-app-storyboard" class="nav-link" data-scroll-target="#shiny-app-storyboard">👓 Shiny App storyboard</a></li>
   </ul>
 </nav>
     </div>
@@ -157,53 +163,80 @@ ul.task-list li input[type="checkbox"] {
 
 
 
-<p><font size="6"> <strong>Fishy Business</strong></font></p>
-<section id="fa-fish-fins-project-overview" class="level1">
-<h1> Project Overview</h1>
-<p>FishEye International, a non-profit focused on countering illegal, unreported, and unregulated (IUU) fishing, has been given access to an international finance corporation’s database on fishing related companies. In the past, FishEye has determined that companies with anomalous structures are far more likely to be involved in IUU (or other “fishy” business). FishEye has transformed the database into a knowledge graph. It includes information about companies, owners, workers, and financial status. FishEye is aiming to use this graph to identify anomalies that could indicate a company is involved in IUU.</p>
-<p>FishEye analysts have attempted to use traditional node-link visualizations and standard graph analyses, but these were found to be ineffective because the scale and detail in the data can obscure a business’s true structure. Can you help FishEye develop a new visual analytics approach to better understand fishing business anomalies?</p>
+<p><font size="6">Weather Situation </font></p>
+<section id="project-motivation" class="level1">
+<h1>🌞Project Motivation</h1>
+<p>In the face of escalating climatic challenges due to global climate change, regions including and surrounding Singapore are experiencing an intensifying array of climatic anomalies. The rising incidence of high-temperature weather, the increased frequency of extreme precipitation events, and the continuous rise in sea levels are stark realities that demand our attention. These phenomena are more than just statistical fluctuations; they have direct and profound impacts on the economy, ecosystems, and public life. Against this backdrop, the significance of developing tools that transform climate data into intuitive insights has become clear.</p>
+<p>We aims to develop an R Shiny-based visualization platform that will enable citizens and policymakers to grasp the data and trends of climate change visually. With interactive charts and simulations, users will be able to explore historical weather patterns, current climatic conditions, and potential future environmental changes. Moreover, the platform will offer functionalities to forecast climatic conditions for the upcoming 50 years, allowing us to make informed decisions based on potential future scenarios.</p>
+<p>This initiative will not only heighten public awareness about the urgency of climate change but will also enhance the adaptability and disaster preparedness of citizens in their daily lives. We believe that the power of data can inspire societal concern for environmental conservation, thereby driving climate action.</p>
 </section>
-<section id="fa-fish-fins-project-objectives" class="level1">
-<h1> Project Objectives</h1>
-<p>This study aims to address the following tasks in sequence:</p>
+<section id="project-objectives" class="level1">
+<h1>☁️Project Objectives</h1>
+<section id="data-integration-and-management" class="level2">
+<h2 class="anchored" data-anchor-id="data-integration-and-management"><strong>Data Integration and Management</strong></h2>
 <ul>
-<li><strong>1: Identify anomalies</strong> in the business groups present in the knowledge graph</li>
-<li><strong>2: Develop a visual analytics process to find similar businesses and group them</strong>, focusing on a business’s most important features and present those features clearly to the user.</li>
-<li><strong>3: Measure similarity of businesses that you group in task 2</strong>, and express confidence in your groupings visually</li>
-<li><strong>4: Provide evidence for or against the case that anomalous companies are involved in illegal fishing,</strong> based on analysis in tasks 1-3, and suggest Which business groups FishEye should investigate further.</li>
+<li><p>To integrate historical and current climate data from reliable sources into a comprehensive database for use in the visualization platform.</p></li>
+<li><p>To ensure data is regularly updated to reflect the latest information and forecasts.</p></li>
 </ul>
 </section>
-<section id="fa-fish-fins-proposed-methodology" class="level1">
-<h1> Proposed Methodology</h1>
-<div class="cell" data-fig-width="8">
-<div class="cell-output-display">
-<div>
-<div>
-<pre class="mermaid mermaid-js">flowchart LR
-  A{Task 1:\nIdentify\nAnomalies} --&gt;|patterns?|B[products or\nservices]
-  A --&gt;|suspicious?|C[revenue]
-  A --&gt;|abnormal?|D[links]
-  A -.- E{Task 2:\nGrouping} -.- I{Tasks 3&amp;4}
-  E --&gt;|overlaps?|F(Company Contacts)
-  E --&gt;|overlaps?|G(Beneficial Owners)
-  E --&gt;|similarities?|H(Country)
-  E --&gt;|similarities?|C
-  E --&gt;|similarities?|B
-  I --&gt; J([Evaluative Metrics])
-</pre>
-</div>
-</div>
-</div>
-</div>
+<section id="visualization-and-user-interface" class="level2">
+<h2 class="anchored" data-anchor-id="visualization-and-user-interface"><strong>Visualization and User Interface</strong></h2>
+<ul>
+<li><p>To develop intuitive, interactive visualization tools that accurately present complex climate data, such as temperature trends, precipitation patterns, and sea-level changes.</p></li>
+<li><p>To design a user-friendly interface that enables users of varying expertise to easily navigate and understand climate data.</p></li>
+</ul>
 </section>
-<section id="fa-fish-fins-shiny-app" class="level1">
-<h1> Shiny App</h1>
-<p>The proposed Shiny App will be an interactive Network Graph visualising different groups of businesses. It will consist of several tabs, highlighing important information related to the tasks:</p>
-<p>I. Entities with <em>Fishy</em> Data patterns<br>
-II. Grouping options for the Network, visualised in an interactive Network Graph (visNetwork)<br>
-III. Proposed Clusters based on user input on clustering criteria<br>
-IV. Evaluative metrics applied to Network Graph II</p>
-<p><a href="https://github.com/haileycsy/VAA-GroupProj">link to github repository</a></p>
+<section id="analysis-and-forecasting" class="level2">
+<h2 class="anchored" data-anchor-id="analysis-and-forecasting"><strong>Analysis and Forecasting</strong></h2>
+<ul>
+<li><p>To implement analytical models that use historical data to forecast future climate conditions up to 50 years ahead.</p></li>
+<li><p>To provide scenario analysis features that help users understand the potential impacts of various climate change trajectories.</p></li>
+</ul>
+</section>
+</section>
+<section id="proposed-methodology" class="level1">
+<h1>📚Proposed Methodology</h1>
+<section id="exploratory-data-analysis-eda-by-data-visualization" class="level2">
+<h2 class="anchored" data-anchor-id="exploratory-data-analysis-eda-by-data-visualization">Exploratory Data Analysis (EDA) by Data Visualization</h2>
+<p>To facilitate a deeper understanding of climate dynamics, our Exploratory Data Analysis (EDA) will leverage the following visualization concepts:</p>
+<p><strong>Visualization of Uncertainty in Temperature Changes:</strong> Using different <strong>visualization tool</strong>, we’ll explore the distribution and density of temperature variations over the years, highlighting the uncertainty and range of temperature fluctuations.</p>
+<p><strong>Multivariate Analysis of Climate Factors:</strong> We aim to dissect the relationships between different climate variables, such as temperature, wind direction, and precipitation, alongside carbon emissions and sea levels, to identify correlations and interactions.</p>
+</section>
+<section id="predictive-analysis-by-data-visualization" class="level2">
+<h2 class="anchored" data-anchor-id="predictive-analysis-by-data-visualization">Predictive Analysis by Data Visualization</h2>
+<p>Leveraging the insights gained from EDA analysis, we will project the climate conditions for the next 50 years. This predictive analysis will focus on</p>
+<p><strong>Future Temperature Changes:</strong> Employing advanced statistical models and visualization techniques, we’ll predict temperature changes, considering factors like carbon emissions and sea levels.</p>
+</section>
+</section>
+<section id="shiny-app-storyboard" class="level1">
+<h1>👓 Shiny App storyboard</h1>
+<p>The envisioned Shiny app is intended to be an interactive platform that clearly presents the variability of Singapore’s weather conditions as well as the global climate warming situation, with options for users to select and view. The preliminary concept consists of several tabs, which include:</p>
+<ol type="1">
+<li><p>Long-term monthly averages for temperature, precipitation, and humidity, as well as forecasts for the coming decades.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/6221707122654_.pic.jpg" class="img-fluid figure-img" width="566"></p>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/6231707122654_.pic.jpg" class="img-fluid figure-img" width="566"></p>
+</figure>
+</div></li>
+<li><p>A focus on Singapore, with regional climate information such as precipitation, temperature, and wind direction. Users will be able to make regional and temporal selections according to their needs.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/6261707122733_.pic_hd.jpg" class="img-fluid figure-img" width="566"></p>
+</figure>
+</div></li>
+<li><p>An investigation into the relationship between sea levels, carbon emissions, and temperature - how they influence each other, with studies on correlation and trend reports.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/6251707122687_.pic.jpg" class="img-fluid figure-img" width="566"></p>
+</figure>
+</div></li>
+<li><p>When necessary, incorporate an overall schematic of global warming, such as a global view of carbon emissions, depending on the situation.</p></li>
+</ol>
 
 
 </section>
