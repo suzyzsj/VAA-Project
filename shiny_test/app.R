@@ -1,12 +1,13 @@
 pacman::p_load(igraph, tidygraph, ggraph, 
                visNetwork, lubridate, clock,
-               tidyverse, graphlayouts, bslib, shinyalert)
+               tidyverse, graphlayouts, bslib, shinyalert,terra,gstat,tmap,sp,sf,leaflet)
 
 # Read the data
 nodes <- read_csv("data/anom_nodes.csv")
 nodes1 <- read_csv("data/mc3_shinynodes1.csv")
 links <- read_csv("data/mc3_links_new1.csv")
 links1 <- read_csv("data/mc3_links_new1.csv")
+merged_data <- read_csv("data/merged_data.csv")
 
 
 ui <- fluidPage(
@@ -14,7 +15,7 @@ ui <- fluidPage(
   shinyjs::useShinyjs(),
   titlePanel(title = "SingaClimate Watch: Navigating the Future"),
   navbarPage(
-    "N.E.M.O.",
+    "@SG",
     id = "tabs",
     tabPanel("Introduction",
              sidebarLayout(
@@ -93,47 +94,16 @@ ui <- fluidPage(
                )
              )
     ),
-    tabPanel("Industry Similarity",
+    tabPanel("Temperature in Singapore",
              sidebarLayout(
-               sidebarPanel = sidebarPanel(
-                 selectInput(
-                   inputId = "industry1",
-                   label = "Select Industry:",
-                   choices = c(
-                     `Fishing-related` = "Fishing-related Company",
-                     `Industrial` = "Industrial Company",
-                     `Food-related` = "Food Company",
-                     `Seafood Processing` = "Seafood-processing Company",
-                     `Consumer Goods` = "Consumer-goods Company",
-                     `Transport & Logistics` = "Transport-logistics Company",
-                     `Multi-industry` = "Multi-Industry Company"
-                     
-                   ), 
-                   selected = "Fishing-related Company"),
-                 selectInput(
-                   inputId = "industry2",
-                   label = "Select Industry:",
-                   choices = c(
-                     `Fishing-related` = "Fishing-related Company",
-                     `Industrial` = "Industrial Company",
-                     `Food-related` = "Food Company",
-                     `Seafood Processing` = "Seafood-processing Company",
-                     `Consumer Goods` = "Consumer-goods Company",
-                     `Transport & Logistics` = "Transport-logistics Company",
-                     `Multi-industry` = "Multi-Industry Company"
-                     
-                   ),
-                   selected = "Fishing-related Company"),
-                 selectInput(inputId = "measure",
-                             label = "Select Similarity Measure",
-                             choices = c("Degree Centrality", "Eigenvector_Centrality", "Page_Rank"),
-                             selected ="Degree Centrality")
-                 
+               sidebarPanel(
+                 selectInput("year", "Select Year:",
+                             choices = unique(merged_data$Year)),
+                 selectInput("month", "Select Month:",
+                             choices = 1:12) # 或者使用月份名称，取决于你的偏好
                ),
-               
-               mainPanel = mainPanel(
-                 title = "Similarity of Industry-based Networks",
-                 plotOutput("networkPlot", height = "730px", width = "800px")
+               mainPanel(
+                 tmapOutput("tempMap")
                )
              )
     )
@@ -292,95 +262,39 @@ server <- function(input, output) {
   })
   
   ### Page 3 output
-  
-  output$networkPlot <- renderPlot({
+  output$tempMap <- renderTmap({
+    # 过滤数据
+    selected_data <- merged_data[merged_data$Year == input$year & merged_data$Month == input$month, ]
     
-    # Filter nodes1 data from input$industry1
-    sfiltered_nodes1 <- nodes1 %>%
-      filter(group == input$industry1)
+    if(nrow(selected_data) == 0) {
+      return(NULL) # 如果没有数据，不渲染地图
+    }
     
-    # Filter nodes2 data from input$industry2
-    sfiltered_nodes2 <- nodes1 %>%
-      filter(group == input$industry2)
+    selected_sf <- st_as_sf(selected_data, coords = c("Longitude", "Latitude"), crs = 4326, agr = "constant") %>%
+      st_transform(crs = 3414)
     
-    # Combine the nodes
-    scombined_nodes <- bind_rows(sfiltered_nodes1, sfiltered_nodes2) %>%
-      distinct(id) %>%
-      left_join(nodes1, by = "id") %>%
-      select(id, group)
+    # 加载地理空间数据
+    mpsz2019 <- st_read(dsn = "data/geospatial", layer = "MPSZ-2019") %>%
+      st_transform(crs = 3414)
     
-    # Filter links based filtered_nodes1 to get connections
-    sfiltered_links <- links1 %>%
-      filter(source %in% scombined_nodes$id)
+    # 检查并修复无效的几何形状
+    if(any(!st_is_valid(mpsz2019))) {
+      mpsz2019 <- st_make_valid(mpsz2019)
+    }
     
-    # Get unique source and target from filtered_links1
-    slinks_source <- sfiltered_links %>%
-      distinct(source) %>%
-      rename("id" = "source")
+    # 创建地图
+    pal <- colorNumeric(palette = "YlOrRd", domain = selected_sf$MonthlyAvgTemp)
+    tmap_mode("view")
     
-    slinks_target <- sfiltered_links %>%
-      distinct(target) %>%
-      rename("id" = "target")
+    tm <- tm_shape(mpsz2019) +
+      tm_borders() +
+      tm_shape(selected_sf) +
+      tm_dots(col = "MonthlyAvgTemp", palette = "YlOrRd", size = 0.2, 
+              popup.vars = c("Station" = "Station", "Year" = "Year", "Month" = "Month", "Avg Temp(°C)" = "MonthlyAvgTemp")) +
+      tm_layout(title = paste(input$year, "Year", month.name[input$month], "Average Temperature in Singapore"))
     
-    
-    # bind links to get overall nodes dataframe1
-    sfiltered_nodes_new <- bind_rows(slinks_source, slinks_target) %>%
-      left_join(nodes, by = "id") %>%
-      select(id, group)
-    
-    # Create graph object1
-    sfiltered_graph <- tbl_graph(nodes = sfiltered_nodes_new,
-                                 edges = sfiltered_links, 
-                                 directed = FALSE)
-    
-    sfiltered_graph <- sfiltered_graph %>%
-      activate(nodes) %>%
-      mutate(
-        degree = degree(sfiltered_graph, mode = "all"),
-        transitivity = transitivity(sfiltered_graph, type = "global"),
-        assortativity = assortativity_degree(sfiltered_graph, directed = FALSE),
-        eigen = eigen_centrality(sfiltered_graph)$vector,
-        closeness = closeness(sfiltered_graph),
-        page_rank = page_rank(sfiltered_graph)$vector
-      )
-    
-    
-    set.seed(1234)
-    ggraph(sfiltered_graph,
-           layout = "nicely"
-    ) +
-      geom_edge_fan(
-        alpha = .6,
-        show.legend = FALSE
-      ) +
-      scale_edge_width(
-        range = c(0.1,4)
-      ) +
-      geom_node_point(
-        aes(size = ifelse(input$measure == "Degree Centrality", degree,
-                          ifelse(input$measure == "Eigenvector_Centrality", eigen,
-                                 ifelse(input$measure == "Page_Rank", page_rank))),
-            color = group),
-        alpha = .9
-      ) +
-      
-      # Remove the legend for "degree"
-      guides(color = guide_legend(title = "Role:"),
-             size = "none"
-      ) + 
-      geom_node_text(
-        aes(label = ifelse(degree > quantile(degree, .75), id, "")), 
-        size = 2,
-        repel = TRUE
-      ) +
-      theme(
-        plot.title = element_text(size = 16,
-                                  color = "grey20"),
-        legend.title = element_text()
-      )
+    tm
   })
-  
-  
 }
 
 # Run the application 
