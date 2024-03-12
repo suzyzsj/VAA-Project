@@ -8,6 +8,7 @@ nodes1 <- read_csv("data/mc3_shinynodes1.csv")
 links <- read_csv("data/mc3_links_new1.csv")
 links1 <- read_csv("data/mc3_links_new1.csv")
 
+
 ui <- fluidPage(
   useShinyalert(force = TRUE),
   shinyjs::useShinyjs(),
@@ -130,7 +131,6 @@ ui <- fluidPage(
                  
                ),
                
-               
                mainPanel = mainPanel(
                  title = "Similarity of Industry-based Networks",
                  plotOutput("networkPlot", height = "730px", width = "800px")
@@ -138,8 +138,9 @@ ui <- fluidPage(
              )
     )
   ),
-  theme = bs_theme(bootswatch = "morph")
+  theme = bs_theme(bootswatch = "superhero")
 )
+
 
 
 server <- function(input, output) {
