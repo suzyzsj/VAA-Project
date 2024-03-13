@@ -1,6 +1,7 @@
 pacman::p_load(igraph, tidygraph, ggraph, 
                visNetwork, lubridate, clock,forecast,
-               tidyverse, graphlayouts, bslib, shinyalert,terra,gstat,tmap,sp,sf,leaflet)
+               tidyverse,graphlayouts, tmap,bslib, shinyalert,terra,gstat,sp,sf,leaflet)
+
 
 # Read the data
 nodes <- read_csv("data/anom_nodes.csv")
@@ -99,7 +100,7 @@ ui <- fluidPage(
                    inputId = "industry",
                    label = "Select Industry:",
                    choices = c(
-                     `All Industries` = "All", 
+                     `All Industries` = "All",
                      `Fishing-related` = "Fishing-related Company",
                      `Industrial` = "Industrial Company",
                      `Food-related` = "Food Company",
@@ -107,14 +108,14 @@ ui <- fluidPage(
                      `Consumer Goods` = "Consumer-goods Company",
                      `Transport & Logistics` = "Transport-logistics Company",
                      `Multi-industry` = "Multi-Industry Company"
-                   ), 
+                   ),
                    selected = "Fishing-related Company"
                  ),
                  selectInput(
                    inputId = "measure",
                    label = "Select Similarity Measure",
                    choices = c(
-                     "Degree Centrality", 
+                     "Degree Centrality",
                      "Eigenvector_Centrality", "Page_Rank"
                    ),
                    selected = "Degree Centrality"
@@ -142,15 +143,15 @@ ui <- fluidPage(
     # 添加 Rainfall Analysis 选项卡
     tabPanel("Rainfall in Singapore",
              flowLayout(
-               numericInput("year", "Year", value = 2023, min = 2014, max = 2023, step = 1),
-               numericInput("month", "Month", value = 1, min = 1, max = 12, step = 1),
+               numericInput("year_rain", "Year", value = 2023, min = 2014, max = 2023, step = 1),
+               numericInput("month_rain", "Month", value = 1, min = 1, max = 12, step = 1),
              ),
              fluidRow(
                column(6,
-                      plotOutput("map_plot") %>% shinycssloaders::withSpinner(type = 5)
+                      tmapOutput("map1_plot") %>% shinycssloaders::withSpinner(type = 5)
                ),
                column(6,
-                      plotOutput("heatmap_plot") %>% shinycssloaders::withSpinner(type = 5)
+                      tmapOutput("map2_plot") %>% shinycssloaders::withSpinner(type = 5)
                ),
              )
     ),
@@ -172,11 +173,11 @@ ui <- fluidPage(
 
 
 server <- function(input, output) {
-  
+
   shinyalert(
     title = "First Time Here?",
     text = "Hi! Welcome to N.E.M.O. Kindly read the user guide before proceeding.",
-    size = "l", 
+    size = "l",
     closeOnEsc = TRUE,
     closeOnClickOutside = FALSE,
     html = FALSE,
@@ -196,31 +197,31 @@ server <- function(input, output) {
   })
   # 添加第二个应用程序的服务器逻辑
   df_year = reactive({
-    data %>% dplyr::filter(Year == input$year)
+    data %>% dplyr::filter(Year == input$year_rain)
   })
-  
+
   df_year_month = reactive({
-    df_year() %>% dplyr::filter(Month == input$month)
+    df_year() %>% dplyr::filter(Month == input$month_rain)
   })
-  
+
   ### Page 1 output
-  
+
   output$anomPlot <- renderVisNetwork({
-    
+
     afilter_nodes <- nodes %>%
       filter(group == input$entity & revenue_group == input$revenue & transboundary == input$transboundary)
-    
+
     afilter_links <- links %>%
       filter(source %in% afilter_nodes$id | target %in% afilter_nodes$id)
-    
+
     adistinct_source <- afilter_links %>%
       distinct(source) %>%
-      rename("id" = "source") 
-    
+      rename("id" = "source")
+
     adistinct_target <- afilter_links %>%
       distinct(target) %>%
       rename("id" = "target")
-    
+
     atotal_nodes <- bind_rows(adistinct_source, adistinct_target)
     atotal_links <- afilter_links %>%
       rename("from" = "source",
@@ -229,7 +230,7 @@ server <- function(input, output) {
     atotal_nodes$color <- ifelse(atotal_nodes$id %in% adistinct_target$id, "#F8766D", "#aebbff")
     # Plot network
     visNetwork(
-      atotal_nodes, 
+      atotal_nodes,
       atotal_links,
       width = "100%"
     ) %>%
@@ -249,38 +250,38 @@ server <- function(input, output) {
       ) %>%
       visInteraction(navigationButtons = FALSE)
   })
-  
+
   ### Page 2 Output
-  
+
   output$similarityPlot <- renderPlot({
-    
+
     # Filter nodes data from input$industry
     filtered_nodes <- nodes1 %>%
       filter(if (input$industry == "All") TRUE else group == input$industry)
-    
+
     # Filter links based filtered_nodes to get connections
     filtered_links <- links1 %>%
       filter(source %in% filtered_nodes$id)
-    
+
     # Get unique source and target
     links_source <- filtered_links %>%
       distinct(source) %>%
       rename("id" = "source")
-    
+
     links_target <- filtered_links %>%
       distinct(target) %>%
       rename("id" = "target")
-    
+
     # bind links to get overall nodes dataframe
     filtered_nodes_new <- bind_rows(links_source, links_target) %>%
       left_join(nodes, by = "id") %>%
       select(id, group)
-    
+
     # Create graph object
     filtered_graph <- tbl_graph(nodes = filtered_nodes_new,
-                                edges = filtered_links, 
+                                edges = filtered_links,
                                 directed = FALSE)
-    
+
     # Calculate all Similarity Measures first
     filtered_graph <- filtered_graph %>%
       activate(nodes) %>%
@@ -292,7 +293,7 @@ server <- function(input, output) {
         closeness = closeness(filtered_graph),
         page_rank = page_rank(filtered_graph)$vector
       )
-    
+
     set.seed(1234)
     ggraph(filtered_graph,
            layout = "nicely"
@@ -314,9 +315,9 @@ server <- function(input, output) {
       # Remove the legend for "degree"
       guides(color = guide_legend(title = "Role:"),
              size = "none"
-      ) + 
+      ) +
       geom_node_text(
-        aes(label = ifelse(degree > quantile(degree, .75), id, "")), 
+        aes(label = ifelse(degree > quantile(degree, .75), id, "")),
         size = 2,
         repel = TRUE
       ) +
@@ -326,103 +327,99 @@ server <- function(input, output) {
         legend.title = element_text()
       )
   })
-  
+
   ### Page 3 output
   output$tempMap <- renderTmap({
     # 过滤数据
     selected_data <- merged_data[merged_data$Year == input$year & merged_data$Month == input$month, ]
-    
+
     if(nrow(selected_data) == 0) {
       return(NULL) # 如果没有数据，不渲染地图
     }
-    
+
     selected_sf <- st_as_sf(selected_data, coords = c("Longitude", "Latitude"), crs = 4326, agr = "constant") %>%
       st_transform(crs = 3414)
-    
+
     # 加载地理空间数据
     mpsz2019 <- st_read(dsn = "data/geospatial", layer = "MPSZ-2019") %>%
       st_transform(crs = 3414)
-    
+
     # 检查并修复无效的几何形状
     if(any(!st_is_valid(mpsz2019))) {
       mpsz2019 <- st_make_valid(mpsz2019)
     }
-    
+
     # 创建地图
     pal <- colorNumeric(palette = "YlOrRd", domain = selected_sf$MonthlyAvgTemp)
     tmap_mode("view")
-    
+
     tm <- tm_shape(mpsz2019) +
       tm_borders() +
       tm_shape(selected_sf) +
-      tm_dots(col = "MonthlyAvgTemp", palette = "YlOrRd", size = 0.2, 
+      tm_dots(col = "MonthlyAvgTemp", palette = "YlOrRd", size = 0.2,
               popup.vars = c("Station" = "Station", "Year" = "Year", "Month" = "Month", "Avg Temp(°C)" = "MonthlyAvgTemp")) +
       tm_layout(title = paste(input$year, "Year", month.name[input$month], "Average Temperature in Singapore"))
-    
+
     tm
   })
   ### Page 4 output
-  output$map_plot = renderPlot({
-    
+
+  rfdata_sf1_obj = reactive({
     df = df_year_month()
-    
+
     rfdata1 <-  df %>%
       group_by(Station, Year, Month) %>%
       dplyr::summarise(MONTHSUM = sum(DailyRainfall, na.rm = TRUE), .groups = "drop") %>%
       ungroup()
-    
-    
+
+
     # rfdata1 <- data %>%
-    #   dplyr::filter(Year == 2023, Month == 1) %>%
+    #   dplyr::filter(Year == 2016, Month == 1) %>%
     #   group_by(Station, Year, Month) %>%
     #   dplyr::summarise(MONTHSUM = sum(DailyRainfall, na.rm = TRUE), .groups = "drop") %>%
     #   ungroup()
-    
+
     rfdata1 <- rfdata1 %>%
-      left_join(rfstations1)
-    # 过滤掉缺失坐标的行
-    rfdata1 <- rfdata1 %>%
-      filter(!is.na(Longitude) & !is.na(Latitude))
-    
+      left_join(rfstations1) %>% drop_na()
+
     rfdata_sf1 <- st_as_sf(rfdata1, coords = c("Longitude", "Latitude"), crs = 4326) %>%
       st_transform(crs = 3414)
-    
-    
+
+
+  })
+
+
+  output$map1_plot = renderTmap({
+
+    rfdata_sf1 = rfdata_sf1_obj()
     grid <- terra::rast(mpsz2019, nrows = 690, ncols = 1075)
     xy <- terra::xyFromCell(grid, 1:ncell(grid))
-    
     sf::sf_use_s2(FALSE)
-    
     coop <- st_as_sf(as.data.frame(xy),
                      coords = c("x","y"),
                      crs = st_crs(mpsz2019))
-    
     coop <- st_filter(coop,mpsz2019)
-    
     res <- gstat(formula = MONTHSUM ~ 1,
                  locations = rfdata_sf1,
                  nmax = 15,
                  set = list(idp = 0))
-    
+
     rfdata_sf_crs1 <- st_crs(rfdata_sf1)
-    
+
     # print(rfdata_sf_crs1)
-    
+
     coop <- st_transform(coop, crs = rfdata_sf_crs1)
-    
     resp <- predict(res,coop)
-    
     resp <- st_transform(resp, crs = terra::crs(grid))
-    
     resp$x <- st_coordinates(resp)[,1]
     resp$y <- st_coordinates(resp)[,2]
     resp$pred <- resp$var1.pred
-    
+
     pred <- terra::rasterize(resp, grid, field = "pred", fun = 'mean')
     #print(terra::values(pred))
-    
+
     tmap_options(check.and.fix = TRUE)
-    tmap_mode("plot")
+    tmap_mode("view")
     tm_shape(pred) +
       tm_raster(alpha = 0.6,
                 palette = "viridis",
@@ -436,62 +433,66 @@ server <- function(input, output) {
       tm_compass(type="8star", size = 2) +
       tm_scale_bar() +
       tm_grid(alpha =0.2)
-    
+
   })
-  
-  
-  output$heatmap_plot = renderPlot({
-    
-    ggplot(df_year(), aes(x = factor(Day), y = factor(Month))) +
-      geom_tile(aes(fill = DailyRainfall), color = "white") +
-      scale_fill_viridis(na.value = "white", name = "Daily Rainfall (mm)") +
-      labs(x = "Day", y = "Month", title = "Daily Rainfall by Month and Day") +
-      theme_minimal() +
-      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-    
+
+
+  output$map2_plot = renderTmap({
+
+
+    rfdata_sf1 = rfdata_sf1_obj()
+
+    tmap_options(check.and.fix = TRUE)
+    tmap_mode("view")
+    tm_shape(mpsz2019)+
+      tm_borders()+
+      tm_shape(rfdata_sf1)+
+      tm_dots(col="MONTHSUM",size = 0.12,
+              popup.vars = c("Station" = "Station", "Year" = "Year", "Month" = "Month", "Month Sum" = "MONTHSUM"))
+
+
   })
-  
+
   output$predict_plot = renderPlot({
     data_filtered <- data %>%
       filter(!is.na(DailyRainfall))
-    
+
     rainfall_sum <- data_filtered %>%
       group_by(Year, Month, Station) %>%
       summarise(Rainfall = sum(DailyRainfall), .groups = "drop")
-    
+
     rainfall_avg <- rainfall_sum %>%
       group_by(Year, Month) %>%
       summarise(AvgRainfall = mean(Rainfall), .groups = "drop")
-    
+
     rain_ts <- rainfall_avg %>%
       ungroup() %>%
       transmute(AvgRainfall) %>%
       ts(start = c(2014, 1), freq = 12)
-    
+
     rain_ts1 <- window(rain_ts, start = c(2014, 1), end = c(2023, 12))
-    
+
     #Plot Time Series Data
     start_year <- start(rain_ts1)[1]
     start_month <- start(rain_ts1)[2]
-    
+
     dates <- seq(as.Date(paste(start_year, start_month, "01", sep = "-")), by = "month", length.out = length(rain_ts1))
-    
+
     rain_ts1_df <- data.frame(Date = dates, AvgRainfall = as.vector(rain_ts1))
-    
-    
+
+
     hujan_train <- window(rain_ts1, end = c(2023,12))
     # hujan_test <- window(rain_ts1, start = c(2024,1))
-    
+
     fit1 <- Arima(hujan_train, order=c(1,0,1), seasonal = c(1,0,1))
-    
+
     forecast_result <- forecast(fit1, h = (input$predict_year - 2023) * 12)
-    
+
     plot(forecast_result)
-    
+
   })
-  
-  
+
 }
 
-# Run the application 
+# Run the application
 shinyApp(ui = ui, server = server)
