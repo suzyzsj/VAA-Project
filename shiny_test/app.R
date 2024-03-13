@@ -1,5 +1,5 @@
 pacman::p_load(igraph, tidygraph, ggraph, 
-               visNetwork, lubridate, clock,
+               visNetwork, lubridate, clock,forecast,
                tidyverse, graphlayouts, bslib, shinyalert,terra,gstat,tmap,sp,sf,leaflet)
 
 # Read the data
@@ -8,6 +8,38 @@ nodes1 <- read_csv("data/mc3_shinynodes1.csv")
 links <- read_csv("data/mc3_links_new1.csv")
 links1 <- read_csv("data/mc3_links_new1.csv")
 merged_data <- read_csv("data/merged_data.csv")
+
+#zxy
+data <- read_csv("data/weather.csv", na = c("?", "�"))
+
+data <- data %>%
+  dplyr::filter(Year >= 2014, Year <= 2023)
+
+colnames(data) <- c(
+  'Station', 'Year', 'Month', 'Day', 'DailyRainfall',
+  'Highest30minRainfall', 'Highest60minRainfall', 'Highest120minRainfall',
+  'MeanTemperature', 'MaxTemperature', 'MinTemperature',
+  'MeanWindSpeed', 'MaxWindSpeed'
+)
+
+data <- data %>%
+  mutate(
+    DailyRainfall = as.numeric(DailyRainfall),
+    Highest30minRainfall = as.numeric(Highest30minRainfall),
+    Highest60minRainfall = as.numeric(Highest60minRainfall),
+    Highest120minRainfall = as.numeric(Highest120minRainfall),
+    MeanTemperature = as.numeric(MeanTemperature),
+    MaxTemperature = as.numeric(MaxTemperature),
+    MinTemperature = as.numeric(MinTemperature)
+  ) %>%
+  suppressWarnings()
+
+
+# Get the rainfall station dataset
+rfstations1 <- read.csv("data/aspatial/RainfallStation.csv")
+
+mpsz2019 <-st_read(dsn = "data/geospatial",layer ="MPSZ-2019") %>%
+  st_transform(CRS =3414)
 
 
 ui <- fluidPage(
@@ -60,7 +92,7 @@ ui <- fluidPage(
                )
              )
     ),
-    tabPanel("Visualising Different Industries",
+    tabPanel("EDA",
              sidebarLayout(
                sidebarPanel = sidebarPanel(
                  selectInput(
@@ -106,6 +138,32 @@ ui <- fluidPage(
                  tmapOutput("tempMap")
                )
              )
+    ),
+    # 添加 Rainfall Analysis 选项卡
+    tabPanel("Rainfall in Singapore",
+             flowLayout(
+               numericInput("year", "Year", value = 2023, min = 2014, max = 2023, step = 1),
+               numericInput("month", "Month", value = 1, min = 1, max = 12, step = 1),
+             ),
+             fluidRow(
+               column(6,
+                      plotOutput("map_plot") %>% shinycssloaders::withSpinner(type = 5)
+               ),
+               column(6,
+                      plotOutput("heatmap_plot") %>% shinycssloaders::withSpinner(type = 5)
+               ),
+             )
+    ),
+    # 添加 Prediction 选项卡
+    tabPanel("Rainfall Prediction",
+             flowLayout(
+               sliderInput("predict_year", "Predict Year", value = 2024, min = 2024, max = 2026, step = 1, sep = ""),
+             ),
+             fluidRow(
+               column(12,
+                      plotOutput("predict_plot") %>% shinycssloaders::withSpinner(type = 5)
+               ),
+             )
     )
   ),
   theme = bs_theme(bootswatch = "superhero")
@@ -135,6 +193,14 @@ server <- function(input, output) {
     if (input$tabs == "Anomalies") {
       shinyjs::runjs('shinyalert();')
     }
+  })
+  # 添加第二个应用程序的服务器逻辑
+  df_year = reactive({
+    data %>% dplyr::filter(Year == input$year)
+  })
+  
+  df_year_month = reactive({
+    df_year() %>% dplyr::filter(Month == input$month)
   })
   
   ### Page 1 output
@@ -295,6 +361,136 @@ server <- function(input, output) {
     
     tm
   })
+  ### Page 4 output
+  output$map_plot = renderPlot({
+    
+    df = df_year_month()
+    
+    rfdata1 <-  df %>%
+      group_by(Station, Year, Month) %>%
+      dplyr::summarise(MONTHSUM = sum(DailyRainfall, na.rm = TRUE), .groups = "drop") %>%
+      ungroup()
+    
+    
+    # rfdata1 <- data %>%
+    #   dplyr::filter(Year == 2023, Month == 1) %>%
+    #   group_by(Station, Year, Month) %>%
+    #   dplyr::summarise(MONTHSUM = sum(DailyRainfall, na.rm = TRUE), .groups = "drop") %>%
+    #   ungroup()
+    
+    rfdata1 <- rfdata1 %>%
+      left_join(rfstations1)
+    # 过滤掉缺失坐标的行
+    rfdata1 <- rfdata1 %>%
+      filter(!is.na(Longitude) & !is.na(Latitude))
+    
+    rfdata_sf1 <- st_as_sf(rfdata1, coords = c("Longitude", "Latitude"), crs = 4326) %>%
+      st_transform(crs = 3414)
+    
+    
+    grid <- terra::rast(mpsz2019, nrows = 690, ncols = 1075)
+    xy <- terra::xyFromCell(grid, 1:ncell(grid))
+    
+    sf::sf_use_s2(FALSE)
+    
+    coop <- st_as_sf(as.data.frame(xy),
+                     coords = c("x","y"),
+                     crs = st_crs(mpsz2019))
+    
+    coop <- st_filter(coop,mpsz2019)
+    
+    res <- gstat(formula = MONTHSUM ~ 1,
+                 locations = rfdata_sf1,
+                 nmax = 15,
+                 set = list(idp = 0))
+    
+    rfdata_sf_crs1 <- st_crs(rfdata_sf1)
+    
+    # print(rfdata_sf_crs1)
+    
+    coop <- st_transform(coop, crs = rfdata_sf_crs1)
+    
+    resp <- predict(res,coop)
+    
+    resp <- st_transform(resp, crs = terra::crs(grid))
+    
+    resp$x <- st_coordinates(resp)[,1]
+    resp$y <- st_coordinates(resp)[,2]
+    resp$pred <- resp$var1.pred
+    
+    pred <- terra::rasterize(resp, grid, field = "pred", fun = 'mean')
+    #print(terra::values(pred))
+    
+    tmap_options(check.and.fix = TRUE)
+    tmap_mode("plot")
+    tm_shape(pred) +
+      tm_raster(alpha = 0.6,
+                palette = "viridis",
+                title = "Total monthly rainfall (mm)") +
+      tm_layout(main.title = "Distribution of monthly rainfall",
+                main.title.position = "center",
+                main.title.size = 1.2,
+                legend.height = 0.45,
+                legend.width = 0.35,
+                frame = TRUE) +
+      tm_compass(type="8star", size = 2) +
+      tm_scale_bar() +
+      tm_grid(alpha =0.2)
+    
+  })
+  
+  
+  output$heatmap_plot = renderPlot({
+    
+    ggplot(df_year(), aes(x = factor(Day), y = factor(Month))) +
+      geom_tile(aes(fill = DailyRainfall), color = "white") +
+      scale_fill_viridis(na.value = "white", name = "Daily Rainfall (mm)") +
+      labs(x = "Day", y = "Month", title = "Daily Rainfall by Month and Day") +
+      theme_minimal() +
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+    
+  })
+  
+  output$predict_plot = renderPlot({
+    data_filtered <- data %>%
+      filter(!is.na(DailyRainfall))
+    
+    rainfall_sum <- data_filtered %>%
+      group_by(Year, Month, Station) %>%
+      summarise(Rainfall = sum(DailyRainfall), .groups = "drop")
+    
+    rainfall_avg <- rainfall_sum %>%
+      group_by(Year, Month) %>%
+      summarise(AvgRainfall = mean(Rainfall), .groups = "drop")
+    
+    rain_ts <- rainfall_avg %>%
+      ungroup() %>%
+      transmute(AvgRainfall) %>%
+      ts(start = c(2014, 1), freq = 12)
+    
+    rain_ts1 <- window(rain_ts, start = c(2014, 1), end = c(2023, 12))
+    
+    #Plot Time Series Data
+    start_year <- start(rain_ts1)[1]
+    start_month <- start(rain_ts1)[2]
+    
+    dates <- seq(as.Date(paste(start_year, start_month, "01", sep = "-")), by = "month", length.out = length(rain_ts1))
+    
+    rain_ts1_df <- data.frame(Date = dates, AvgRainfall = as.vector(rain_ts1))
+    
+    
+    hujan_train <- window(rain_ts1, end = c(2023,12))
+    # hujan_test <- window(rain_ts1, start = c(2024,1))
+    
+    fit1 <- Arima(hujan_train, order=c(1,0,1), seasonal = c(1,0,1))
+    
+    forecast_result <- forecast(fit1, h = (input$predict_year - 2023) * 12)
+    
+    plot(forecast_result)
+    
+  })
+  
+  
 }
 
 # Run the application 
