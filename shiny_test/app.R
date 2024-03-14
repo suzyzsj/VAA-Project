@@ -408,7 +408,7 @@ server <- function(input, output) {
     
     # 绘制聚类结果
     ggplot(station_means, aes(x = Station, y = MonthlyAvgTemp, color = factor(Cluster))) +
-      geom_point() +
+      geom_point(size = 3) +
       theme(axis.text.x = element_text(angle = 90, hjust = 1))
   })
   
