@@ -8,8 +8,10 @@ nodes <- read_csv("data/anom_nodes.csv")
 nodes1 <- read_csv("data/mc3_shinynodes1.csv")
 links <- read_csv("data/mc3_links_new1.csv")
 links1 <- read_csv("data/mc3_links_new1.csv")
-merged_data <- read_csv("data/merged_data.csv")
 
+#zsj
+merged_data <- read_csv("data/merged_data.csv")
+monthly_data_filtered <- read_csv("data/monthly_data_filtered.csv")
 #zxy
 data <- read_csv("data/weather.csv", na = c("?", "�"))
 
@@ -128,15 +130,36 @@ ui <- fluidPage(
              )
     ),
     tabPanel("Temperature in Singapore",
-             sidebarLayout(
-               sidebarPanel(
-                 selectInput("year", "Select Year:",
-                             choices = unique(merged_data$Year)),
-                 selectInput("month", "Select Month:",
-                             choices = 1:12) # 或者使用月份名称，取决于你的偏好
+             fluidRow(
+               column(6,
+                      selectInput("year", "Select Year:",
+                                  choices = unique(merged_data$Year))
                ),
-               mainPanel(
-                 tmapOutput("tempMap")
+               column(6,
+                      selectInput("month", "Select Month:",
+                                  choices = 1:12) # 或者使用月份名称，取决于你的偏好
+               )
+             ),
+             fluidRow(
+               column(12,
+                      tmapOutput("tempMap")
+               )
+             )
+    ),
+    tabPanel("Clustering Analysis",
+             fluidRow(
+               column(12,
+                      sliderInput("selectedYear", "Select Year:",
+                                  min = min(monthly_data_filtered$Year),
+                                  max = max(monthly_data_filtered$Year),
+                                  value = max(monthly_data_filtered$Year),
+                                  step = 1,
+                                  sep = '')
+               )
+             ),
+             fluidRow(
+               column(12,
+                      plotOutput("clusterPlot")
                )
              )
     ),
@@ -358,10 +381,38 @@ server <- function(input, output) {
       tm_shape(selected_sf) +
       tm_dots(col = "MonthlyAvgTemp", palette = "YlOrRd", size = 0.2,
               popup.vars = c("Station" = "Station", "Year" = "Year", "Month" = "Month", "Avg Temp(°C)" = "MonthlyAvgTemp")) +
-      tm_layout(title = paste(input$year, "Year", month.name[input$month], "Average Temperature in Singapore"))
+      tm_layout(title = paste(input$year,"-",input$month, "Average Temperature in Singapore"))
 
     tm
   })
+    #page:cluster
+  output$clusterPlot <- renderPlot({
+    # 根据用户选择的年份过滤数据
+    filtered_data <- subset(monthly_data_filtered, Year == input$selectedYear)
+    
+    # 数据清洗
+    clean_data <- na.omit(filtered_data)
+    
+    # 计算每个站点的平均温度
+    station_means <- aggregate(MonthlyAvgTemp ~ Station, clean_data, mean)
+    
+    # 设置种子以确保可重复性
+    set.seed(123)
+    k <- 3
+    
+    # 执行k-means聚类
+    cluster_result <- kmeans(station_means$MonthlyAvgTemp, centers = k)
+    
+    # 将聚类结果添加到站点平均数据中
+    station_means$Cluster <- cluster_result$cluster
+    
+    # 绘制聚类结果
+    ggplot(station_means, aes(x = Station, y = MonthlyAvgTemp, color = factor(Cluster))) +
+      geom_point() +
+      theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  })
+  
+
   ### Page 4 output
 
   rfdata_sf1_obj = reactive({
