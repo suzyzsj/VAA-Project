@@ -1,39 +1,23 @@
-#library(gstat)
-#pacman::p_load(igraph, tidygraph, ggraph, 
-#               visNetwork, lubridate, clock,forecast,
-#              tidyverse,graphlayouts, tmap,bslib, shinyalert,terra,sp,sf,leaflet,gstat)
 library(gstat)
-library(igraph)
-library(tidygraph)
-library(ggraph)
-library(visNetwork)
-library(lubridate)
-library(clock)
-library(forecast)
-library(tidyverse)
-library(graphlayouts)
-library(tmap)
-library(bslib)
-library(shinyalert)
-library(terra)
-library(sp)
-library(sf)
-library(leaflet)
-
+pacman::p_load(igraph, tidygraph, ggraph, 
+               visNetwork, lubridate, clock,forecast,
+               tidyverse,graphlayouts, tmap,bslib, shinyalert,terra,sp,sf,leaflet)
 
 # Read the data
-nodes <- read_csv("data/anom_nodes.csv")
-nodes1 <- read_csv("data/mc3_shinynodes1.csv")
-links <- read_csv("data/mc3_links_new1.csv")
-links1 <- read_csv("data/mc3_links_new1.csv")
 
-#zsj
+#111
 merged_data <- read_csv("data/merged_data.csv")
 monthly_data_filtered <- read_csv("data/monthly_data_filtered.csv")
-#zxy
+
+#222
 data <- read_csv("data/cleaned_data.csv")
+
+rfstations1 <- read.csv("data/rainfall_stations.csv")
+# Read shape file
 mpsz2019 <-st_read(dsn = "data/geospatial",layer ="MPSZ-2019") %>%
   st_transform(CRS =3414)
+
+
 
 ui <- fluidPage(
   useShinyalert(force = TRUE),
