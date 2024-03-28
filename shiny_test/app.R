@@ -8,6 +8,8 @@ pacman::p_load(igraph, tidygraph, ggraph,
 #111
 merged_data <- read_csv("data/merged_data.csv")
 monthly_data_filtered <- read_csv("data/monthly_data_filtered.csv")
+data_with_mean_temp <- read_csv("data/data_with_mean_temp.csv")
+
 
 #222
 data <- read_csv("data/cleaned_data.csv")
@@ -16,7 +18,6 @@ rfstations1 <- read.csv("data/rainfall_stations.csv")
 # Read shape file
 mpsz2019 <-st_read(dsn = "data/geospatial",layer ="MPSZ-2019") %>%
   st_transform(CRS =3414)
-
 
 
 ui <- fluidPage(
@@ -103,6 +104,7 @@ ui <- fluidPage(
                )
              )
     ),
+    
     tabPanel("Temperature in Singapore",
              fluidRow(
                column(6,
@@ -111,13 +113,16 @@ ui <- fluidPage(
                ),
                column(6,
                       selectInput("month", "Select Month:",
-                                  choices = 1:12) # 或者使用月份名称，取决于你的偏好
+                                  choices = 1:12) 
                )
              ),
              fluidRow(
-               column(12,
-                      tmapOutput("tempMap")
-               )
+               column(6,
+                      plotOutput("boxPlot") %>% shinycssloaders::withSpinner(type = 5)
+               ),
+               column(6,
+                      tmapOutput("tempMap") %>% shinycssloaders::withSpinner(type = 5)
+               ),
              )
     ),
     tabPanel("Clustering Analysis",
@@ -202,6 +207,18 @@ server <- function(input, output) {
   
   df_year_month = reactive({
     df_year() %>% dplyr::filter(Month == input$month_rain)
+  })
+  
+  filteredData <- reactive({
+    data_filtered <- merged_data[merged_data$Year == as.numeric(input$year), ]
+    return(data_filtered)
+  })
+
+  # 使用reactive表达式创建动态过滤后的数据
+  filteredData1 <- reactive({
+    # 假设你有一个名为merged_data的数据框，并且其中有一个'Year'列
+    merged_data %>%
+      filter(Year == input$year) # 使用用户选择的年份进行过滤
   })
   
   ### Page 1 output
@@ -329,6 +346,20 @@ server <- function(input, output) {
   })
   
   ### Page 3 output
+  output$boxPlot <- renderPlot({
+    filtered_data1 <- merged_data %>%
+      filter(Year == input$year) %>%
+      group_by(Station, Month) %>%
+      summarise(MonthlyAvg = mean(MonthlyAvgTemp, na.rm = TRUE))
+    
+    p <- ggplot(filtered_data1, aes(x = factor(Month), y = MonthlyAvg, fill = (MonthlyAvg > 27))) +
+      geom_boxplot() +
+      scale_fill_manual(values = c("FALSE" = "lightblue", "TRUE" = "salmon")) +
+      labs(x = "Month", y = "Monthly Average Temperature") +
+      theme_minimal()
+    
+    print(p)
+  })
   output$tempMap <- renderTmap({
     # 过滤数据
     selected_data <- merged_data[merged_data$Year == input$year & merged_data$Month == input$month, ]
