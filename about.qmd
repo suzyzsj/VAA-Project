@@ -1,7 +1,18 @@
 ---
-title: "About"
+title: "About the team"
 format:
   html:
     mermaid:
       theme: dark
 ---
+
+::: {style="display: flex; flex-wrap: wrap; gap: 0px; justify-content: center;"}
+![](images/sunny.gif){width="280px"} ![](images/rainy.gif){width="280px"} ![](images/windy.gif){width="280px"} ![](images/cloudy.gif){width="280px"}
+:::
+
+```{mermaid}
+flowchart LR
+A{Be Weatherwise\nor Otherwise} --- B[Weather Observations]
+B --> C(Zhang Shujie)
+B --> D(Zhao Xinyue)
+```

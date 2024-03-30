@@ -143,11 +143,11 @@ server <- function(input, output) {
     return(data_filtered)
   })
   
-  # 使用reactive表达式创建动态过滤后的数据
+  
   filteredData1 <- reactive({
-    # 假设你有一个名为merged_data的数据框，并且其中有一个'Year'列
+    
     merged_data %>%
-      filter(Year == input$year) # 使用用户选择的年份进行过滤
+      filter(Year == input$year) 
   })
   
   ### Page 3 output
@@ -166,26 +166,26 @@ server <- function(input, output) {
     print(p)
   })
   output$tempMap <- renderTmap({
-    # 过滤数据
+    
     selected_data <- merged_data[merged_data$Year == input$year & merged_data$Month == input$month, ]
     
     if(nrow(selected_data) == 0) {
-      return(NULL) # 如果没有数据，不渲染地图
+      return(NULL) 
     }
     
     selected_sf <- st_as_sf(selected_data, coords = c("Longitude", "Latitude"), crs = 4326, agr = "constant") %>%
       st_transform(crs = 3414)
     
-    # 加载地理空间数据
+   
     mpsz2019 <- st_read(dsn = "data/geospatial", layer = "MPSZ-2019") %>%
       st_transform(crs = 3414)
     
-    # 检查并修复无效的几何形状
+    
     if(any(!st_is_valid(mpsz2019))) {
       mpsz2019 <- st_make_valid(mpsz2019)
     }
     
-    # 创建地图
+    
     pal <- colorNumeric(palette = "YlOrRd", domain = selected_sf$MonthlyAvgTemp)
     tmap_mode("view")
     
@@ -200,25 +200,19 @@ server <- function(input, output) {
   })
   #page:cluster
   output$clusterPlot <- renderPlot({
-    # 根据用户选择的年份过滤数据
+    
     filtered_data <- subset(monthly_data_filtered, Year == input$selectedYear)
     
-    # 数据清洗
     clean_data <- na.omit(filtered_data)
     
-    # 计算每个站点的平均温度
     station_means <- aggregate(MonthlyAvgTemp ~ Station, clean_data, mean)
-    
-    # 设置种子以确保可重复性
+
     set.seed(123)
-    
-    # 执行k-means聚类,使用用户选择的聚类数
+
     cluster_result <- kmeans(station_means$MonthlyAvgTemp, centers = input$selectedK)
-    
-    # 将聚类结果添加到站点平均数据中
+ 
     station_means$Cluster <- as.factor(cluster_result$cluster)
-    
-    # 绘制聚类结果
+
     ggplot(station_means, aes(x = Station, y = MonthlyAvgTemp, color = Cluster)) +
       geom_point(size = 3) +
       theme(axis.text.x = element_text(angle = 90, hjust = 1)) +

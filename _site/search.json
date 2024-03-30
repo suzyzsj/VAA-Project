@@ -47,5 +47,12 @@
     "title": "Be Weatherwise",
     "section": "",
     "text": "&lt;!DOCTYPE qgis PUBLIC ‘http://mrcc.com/qgis.dtd’ ‘SYSTEM’&gt;     dataset\n\n\n        0 0     false"
+  },
+  {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "About the team",
+    "section": "",
+    "text": "flowchart LR\nA{Be Weatherwise\\nor Otherwise} --- B[Weather Observations]\nB --&gt; C(Zhang Shujie)\nB --&gt; D(Zhao Xinyue)"
   }
 ]

@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Be Weatherwise - About</title>
+<title>Be Weatherwise - About the team</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -60,6 +60,10 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
+<meta name="mermaid-theme" content="dark">
+<script src="site_libs/quarto-diagram/mermaid.min.js"></script>
+<script src="site_libs/quarto-diagram/mermaid-init.js"></script>
+<link href="site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
 
 
 <link rel="stylesheet" href="styles.css">
@@ -128,7 +132,7 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">About</h1>
+<h1 class="title">About the team</h1>
 </div>
 
 
@@ -143,6 +147,22 @@ ul.task-list li input[type="checkbox"] {
 
 </header>
 
+<div style="display: flex; flex-wrap: wrap; gap: 0px; justify-content: center;">
+<p><img src="images/sunny.gif" class="img-fluid" width="280"> <img src="images/rainy.gif" class="img-fluid" width="280"> <img src="images/windy.gif" class="img-fluid" width="280"> <img src="images/cloudy.gif" class="img-fluid" width="280"></p>
+</div>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<div>
+<pre class="mermaid mermaid-js">flowchart LR
+A{Be Weatherwise\nor Otherwise} --- B[Weather Observations]
+B --&gt; C(Zhang Shujie)
+B --&gt; D(Zhao Xinyue)
+</pre>
+</div>
+</div>
+</div>
+</div>
 
 
 
