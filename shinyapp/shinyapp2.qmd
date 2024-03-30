@@ -2,3 +2,10 @@
 title: "Shiny App"
 title-block-banner: true
 ---
+
+
+<iframe src="https://isss60.shinyapps.io/SingaClimateWatch/"
+        style="display: block; margin: 0 auto;"
+        width="1000px" height="1000px" scrolling="yes" frameborder="0">
+</iframe>
+---

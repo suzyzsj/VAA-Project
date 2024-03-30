@@ -1,0 +1,12 @@
+name: SingaClimateWatch
+title: SingaClimateWatch
+username: isss60
+account: isss60
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 11623685
+bundleId: 8435456
+url: https://isss60.shinyapps.io/SingaClimateWatch/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE

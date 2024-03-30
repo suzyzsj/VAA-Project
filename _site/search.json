@@ -40,5 +40,12 @@
     "title": "VAST Mini-Challenge 3: Proposal",
     "section": "Predictive Analysis by Data Visualization",
     "text": "Predictive Analysis by Data Visualization\nLeveraging the insights gained from EDA analysis, we will project the climate conditions for the next 50 years. This predictive analysis will focus on\nFuture Temperature Changes: Employing advanced statistical models and visualization techniques, we’ll predict temperature changes, considering factors like carbon emissions and sea levels."
+  },
+  {
+    "objectID": "shiny_test/data/geospatial/MPSZ-2019.html",
+    "href": "shiny_test/data/geospatial/MPSZ-2019.html",
+    "title": "Be Weatherwise",
+    "section": "",
+    "text": "&lt;!DOCTYPE qgis PUBLIC ‘http://mrcc.com/qgis.dtd’ ‘SYSTEM’&gt;     dataset\n\n\n        0 0     false"
   }
 ]
