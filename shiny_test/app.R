@@ -1,4 +1,5 @@
 library(gstat)
+library(plotly)
 pacman::p_load(igraph, tidygraph, ggraph, 
                visNetwork, lubridate, clock,forecast,
                tidyverse,graphlayouts, tmap,bslib, shinyalert,terra,sp,sf,leaflet)
@@ -16,9 +17,8 @@ data <- read_csv("data/cleaned_data.csv")
 
 rfstations1 <- read.csv("data/rainfall_stations.csv")
 # Read shape file
-mpsz2019 <-st_read(dsn = "data/geospatial",layer ="MPSZ-2019") %>%
-  st_transform(CRS =3414)
-
+#mpsz2019 <-st_read(dsn = "data/geospatial",layer ="MPSZ-2019") %>%
+# st_transform(CRS =3414)
 
 ui <- fluidPage(
   useShinyalert(force = TRUE),
@@ -27,7 +27,7 @@ ui <- fluidPage(
   navbarPage(
     "@SG",
     id = "tabs",
- 
+    
     tabPanel("Temperature in Singapore",
              fluidRow(
                column(6,
@@ -50,13 +50,17 @@ ui <- fluidPage(
     ),
     tabPanel("Clustering Analysis",
              fluidRow(
-               column(12,
+               column(6,
                       sliderInput("selectedYear", "Select Year:",
                                   min = min(monthly_data_filtered$Year),
                                   max = max(monthly_data_filtered$Year),
                                   value = max(monthly_data_filtered$Year),
                                   step = 1,
                                   sep = '')
+               ),
+               column(6,
+                      numericInput("selectedK", "Select Number of Clusters (k):",
+                                   min = 2, max = 6, value = 3, step = 1)
                )
              ),
              fluidRow(
@@ -65,22 +69,32 @@ ui <- fluidPage(
                )
              )
     ),
-    #Rainfall Analysis
+    # Rainfall Analysis
     tabPanel("Rainfall in Singapore",
-             flowLayout(
-               numericInput("year_rain", "Year", value = 2023, min = 2014, max = 2023, step = 1),
-               numericInput("month_rain", "Month", value = 1, min = 1, max = 12, step = 1),
-               numericInput("nmax", "nmax(IDW)",value = 10, min = 1, max = 15, step = 1)
+             fluidRow(
+               column(4,
+                      selectInput("year_rain", "Select Year:",
+                                  choices = unique(data$Year))
+               ),
+               column(4,
+                      selectInput("month_rain", "Select Month:",
+                                  choices = 1:12)
+               ),
+               column(4,
+                      selectInput("station_rain", "Select Station:",
+                                  choices = unique(data$Station))
+               )
              ),
              fluidRow(
                column(6,
-                      tmapOutput("map1_plot") %>% shinycssloaders::withSpinner(type = 5)
+                      plotOutput("rainMonthlyPlot")
                ),
                column(6,
-                      tmapOutput("map2_plot") %>% shinycssloaders::withSpinner(type = 5)
-               ),
+                      tmapOutput("rainMap")
+               )
              )
     ),
+    
     # Prediction
     tabPanel("Rainfall Prediction",
              flowLayout(
@@ -123,20 +137,12 @@ server <- function(input, output) {
       shinyjs::runjs('shinyalert();')
     }
   })
-  # 添加第二个应用程序的服务器逻辑
-  df_year = reactive({
-    data %>% dplyr::filter(Year == input$year_rain)
-  })
-  
-  df_year_month = reactive({
-    df_year() %>% dplyr::filter(Month == input$month_rain)
-  })
   
   filteredData <- reactive({
     data_filtered <- merged_data[merged_data$Year == as.numeric(input$year), ]
     return(data_filtered)
   })
-
+  
   # 使用reactive表达式创建动态过滤后的数据
   filteredData1 <- reactive({
     # 假设你有一个名为merged_data的数据框，并且其中有一个'Year'列
@@ -205,98 +211,87 @@ server <- function(input, output) {
     
     # 设置种子以确保可重复性
     set.seed(123)
-    k <- 3
     
-    # 执行k-means聚类
-    cluster_result <- kmeans(station_means$MonthlyAvgTemp, centers = k)
+    # 执行k-means聚类,使用用户选择的聚类数
+    cluster_result <- kmeans(station_means$MonthlyAvgTemp, centers = input$selectedK)
     
     # 将聚类结果添加到站点平均数据中
-    station_means$Cluster <- cluster_result$cluster
+    station_means$Cluster <- as.factor(cluster_result$cluster)
     
     # 绘制聚类结果
-    ggplot(station_means, aes(x = Station, y = MonthlyAvgTemp, color = factor(Cluster))) +
+    ggplot(station_means, aes(x = Station, y = MonthlyAvgTemp, color = Cluster)) +
       geom_point(size = 3) +
-      theme(axis.text.x = element_text(angle = 90, hjust = 1))
+      theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+      labs(title = paste("Clustering Result (k =", input$selectedK, ")"),
+           x = "Station", y = "Monthly Average Temperature", color = "Cluster")
+  })
+  ### Page 4 plot output
+  filtered_rain_data_monthly <- reactive({
+    data %>%
+      filter(Year == input$year_rain,
+             Station == input$station_rain) %>%
+      group_by(Year, Month) %>%
+      summarise(MonthlyRainfall = sum(DailyRainfall, na.rm = TRUE), .groups = "drop")
+  })
+  
+  output$rainMonthlyPlot <- renderPlot({
+    ggplot(filtered_rain_data_monthly(), aes(x = factor(Month), y = MonthlyRainfall, fill = MonthlyRainfall)) +
+      geom_col() +
+      scale_fill_gradient(low = "lightblue", high = "darkblue", name = "Monthly\nRainfall\n(mm)") +
+      labs(x = "Month", y = "Monthly Rainfall (mm)") +
+      theme_minimal() +
+      theme(legend.position = "right", 
+            legend.key.height = unit(1, "cm"),
+            legend.key.width = unit(0.5, "cm"),
+            legend.title = element_text(size = 10, face = "bold"),
+            legend.text = element_text(size = 10),
+            plot.title = element_text(size = 14, face = "bold", hjust = 0.5),
+            axis.title = element_text(size = 12, face = "bold"),
+            axis.text = element_text(size = 10)) +
+      ggtitle(paste("Monthly Rainfall Distribution for", input$station_rain, "in", input$year_rain))
   })
   
   
-  ### Page 4 output
+  ### Page 4 map output
+  filtered_rain_data <- reactive({
+    data %>%
+      filter(Year == input$year_rain,
+             Month == input$month_rain) %>%
+      group_by(Station, Year, Month, Longitude, Latitude) %>%
+      summarise(MonthlyRainfall = sum(DailyRainfall, na.rm = TRUE), .groups = "drop")
+  })
   
-  rfdata_sf1_obj = reactive({
-    df = df_year_month()
+  output$rainMap <- renderTmap({
+    filtered_data <- filtered_rain_data()
     
-    rfdata1 <-  df %>%
-      group_by(Station, Year, Month) %>%
-      dplyr::summarise(MONTHSUM = sum(DailyRainfall, na.rm = TRUE), .groups = "drop") %>%
-      ungroup()
+    if(nrow(filtered_data) == 0) {
+      return(NULL)
+    }
     
-    rfdata1 <- rfdata1 %>%
-      left_join(rfstations1) %>% drop_na()
-    
-    rfdata_sf1 <- st_as_sf(rfdata1, coords = c("Longitude", "Latitude"), crs = 4326) %>%
+    filtered_sf <- st_as_sf(filtered_data, coords = c("Longitude", "Latitude"), crs = 4326, agr = "constant") %>%
       st_transform(crs = 3414)
-  })
-  
-  
-  output$map1_plot = renderTmap({
     
-    rfdata_sf1 = rfdata_sf1_obj()
-    grid <- terra::rast(mpsz2019, nrows = 690, ncols = 1075)
-    xy <- terra::xyFromCell(grid, 1:ncell(grid))
-    sf::sf_use_s2(FALSE)
-    coop <- st_as_sf(as.data.frame(xy),
-                     coords = c("x","y"),
-                     crs = st_crs(mpsz2019))
-    coop <- st_filter(coop,mpsz2019)
-    res <- gstat(formula = MONTHSUM ~ 1,
-                 locations = rfdata_sf1,
-                 nmax = input$nmax, # 使用输入的 nmax 值
-                 set = list(idp = 0))
+    mpsz2019 <- st_read(dsn = "data/geospatial", layer = "MPSZ-2019") %>%
+      st_transform(crs = 3414)
     
-    rfdata_sf_crs1 <- st_crs(rfdata_sf1)
+    if(any(!st_is_valid(mpsz2019))) {
+      mpsz2019 <- st_make_valid(mpsz2019)
+    }
     
-    coop <- st_transform(coop, crs = rfdata_sf_crs1)
-    resp <- predict(res,coop)
-    resp <- st_transform(resp, crs = terra::crs(grid))
-    resp$x <- st_coordinates(resp)[,1]
-    resp$y <- st_coordinates(resp)[,2]
-    resp$pred <- resp$var1.pred
-    
-    pred <- terra::rasterize(resp, grid, field = "pred", fun = 'mean')
-    
-    tmap_options(check.and.fix = TRUE)
+    pal <- colorNumeric(palette = "Blues", domain = filtered_sf$MonthlyRainfall)
     tmap_mode("view")
-    tm_shape(pred) +
-      tm_raster(alpha = 0.6,
-                palette = "viridis",
-                title = "Total monthly rainfall (mm)") +
-      tm_layout(main.title = "Distribution of monthly rainfall",
-                main.title.position = "center",
-                main.title.size = 1.2,
-                legend.height = 0.45,
-                legend.width = 0.35,
-                frame = TRUE) +
-      tm_compass(type="8star", size = 2) +
-      tm_scale_bar() +
-      tm_grid(alpha =0.2)
     
+    tm <- tm_shape(mpsz2019) +
+      tm_borders() +
+      tm_shape(filtered_sf) +
+      tm_dots(col = "MonthlyRainfall", palette = "Blues", size = 0.2,
+              popup.vars = c("Station", "Year", "Month", "Monthly Rainfall (mm)" = "MonthlyRainfall")) +
+      tm_layout(title = paste(input$year_rain, "-", input$month_rain, "Monthly Rainfall in Singapore"))
+    
+    tm
   })
   
-  
-  output$map2_plot = renderTmap({
-    
-    
-    rfdata_sf1 = rfdata_sf1_obj()
-    
-    tmap_options(check.and.fix = TRUE)
-    tmap_mode("view")
-    tm_shape(mpsz2019)+
-      tm_borders()+
-      tm_shape(rfdata_sf1)+
-      tm_dots(col="MONTHSUM",size = 0.12,
-              popup.vars = c("Station" = "Station", "Year" = "Year", "Month" = "Month", "Month Sum" = "MONTHSUM"))
-  })
-  
+  #time series plot
   output$predict_plot = renderPlot({
     data_filtered <- data %>%
       filter(!is.na(DailyRainfall))
