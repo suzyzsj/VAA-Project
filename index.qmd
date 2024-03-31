@@ -7,8 +7,8 @@ format:
 
 ## Be Weatherwise or Otherwise：
 
-#### Join us as we dive deep into Singapore's weather patterns and trends. 
+#### Join us as we dive deep into Singapore's weather patterns and trends.
 
-#### Through data analysis and predictive modeling, we shed light on the island nation's changing climate and what it means for the future. 
+#### Through data analysis and predictive modeling, we shed light on the island nation's changing climate and what it means for the future.
 
 #### 
