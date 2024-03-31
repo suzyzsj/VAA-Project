@@ -100,17 +100,17 @@ ui <- fluidPage(
              flowLayout(
                sliderInput("predict_year", "Predict Year", value = 2024, min = 2024, max = 2030, step = 1, sep = ""),
                selectInput("show_forecast", "Show Forecast", choices = c("Yes", "No"), selected = "Yes"),
-               selectInput("show_ci", "Show 95% CI", choices = c("Yes", "No"), selected = "Yes")
+               selectInput("show_ci", "Show CI", choices = c("Yes", "No"), selected = "Yes"),
+               selectInput("ci_level", "CI Level", choices = c("90%", "95%"), selected = "95%")
              ),
              fluidRow(
                column(12,
                       plotOutput("predict_plot")
                )
              )
-    )
-  ),
-  theme = bs_theme(bootswatch = "superhero")
-)
+    ),
+    theme = bs_theme(bootswatch = "superhero")
+  ))
 
 
 
@@ -311,12 +311,21 @@ server <- function(input, output) {
     
     forecast_result <- forecast(fit1, h = (input$predict_year - 2023) * 12)
     
+    # 选择置信区间
+    if (input$ci_level == "90%") {
+      ci_lower <- forecast_result$lower[, 1]
+      ci_upper <- forecast_result$upper[, 1]
+    } else {
+      ci_lower <- forecast_result$lower[, 2]
+      ci_upper <- forecast_result$upper[, 2]
+    }
+    
     plot(rain_ts1,
          main = "Rainfall Forecast",
          ylab = "Average Rainfall",
          xlab = "Year",
          xlim = c(2014, input$predict_year),
-         ylim = c(0, max(rain_ts1, forecast_result$upper[, 2])),
+         ylim = c(0, max(rain_ts1, ci_upper)),
          type = "l",
          col = "black",
          lwd = 2
@@ -328,7 +337,7 @@ server <- function(input, output) {
     
     if (input$show_ci == "Yes") {
       polygon(c(time(forecast_result$lower), rev(time(forecast_result$upper))),
-              c(forecast_result$lower[, 2], rev(forecast_result$upper[, 2])),
+              c(ci_lower, rev(ci_upper)),
               col = "lightskyblue",
               border = NA
       )
@@ -345,7 +354,7 @@ server <- function(input, output) {
     }
     
     if (input$show_ci == "Yes") {
-      legend_items <- c(legend_items, "95% CI")
+      legend_items <- c(legend_items, paste0(input$ci_level, " CI"))
       legend_colors <- c(legend_colors, "lightskyblue")
       legend_lty <- c(legend_lty, 2)
     }
