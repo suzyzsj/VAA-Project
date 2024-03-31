@@ -54,5 +54,19 @@
     "title": "About the team",
     "section": "",
     "text": "flowchart LR\nA{Be Weatherwise\\nor Otherwise} --- B[Weather Observations]\nB --&gt; C(Zhang Shujie)\nB --&gt; D(Zhao Xinyue)"
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Be Weatherwise or Otherwise!",
+    "section": "",
+    "text": "Join us as we dive deep into Singapore’s weather patterns and trends. Through data analysis and predictive modeling, we shed light on the island nation’s changing climate and what it means for the future."
+  },
+  {
+    "objectID": "index.html#navigating-singapores-climate-challenges",
+    "href": "index.html#navigating-singapores-climate-challenges",
+    "title": "Be Weatherwise",
+    "section": "Navigating Singapore’s Climate Challenges",
+    "text": "Navigating Singapore’s Climate Challenges\n\nJoin us as we dive deep into Singapore’s weather patterns and trends. Through data analysis and predictive modeling, we shed light on the island nation’s changing climate and what it means for the future."
   }
 ]
