@@ -2,3 +2,5 @@
 title: "Project Poster"
 title-block-banner: true
 ---
+
+![](images/poster.jpg){fig-align="left" height="720"}
