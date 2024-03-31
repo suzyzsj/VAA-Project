@@ -14,11 +14,8 @@ data_with_mean_temp <- read_csv("data/data_with_mean_temp.csv")
 
 #222
 data <- read_csv("data/cleaned_data.csv")
-
-rfstations1 <- read.csv("data/rainfall_stations.csv")
-# Read shape file
-#mpsz2019 <-st_read(dsn = "data/geospatial",layer ="MPSZ-2019") %>%
-# st_transform(CRS =3414)
+#rfstations1 <- read.csv("data/rainfall_stations.csv")
+final_data <- read_csv("data/final_data.csv")
 
 ui <- fluidPage(
   useShinyalert(force = TRUE),
@@ -95,6 +92,34 @@ ui <- fluidPage(
              )
     ),
     
+    tabPanel("Correlation Analysis",
+             fluidRow(
+               column(4,
+                      selectInput("x_var", "Select X Variable", 
+                                  choices = c("MaxTemperature", "MinTemperature", "MeanTemperature", "MeanRainfall", 
+                                              "Highest30minRainfall", "Highest60minRainfall", "Highest120minRainfall"),
+                                  selected = "MaxTemperature")
+               ),
+               column(4,
+                      selectInput("y_var", "Select Y Variable",
+                                  choices = c("mmfrom1993-2008average", "carbonemmision"),
+                                  selected = "carbonemmision")
+               ),
+               column(4,
+                      selectInput("smooth_method", "Select Smoothing Method",
+                                  choices = c("Linear" = "lm", "Loess" = "loess", "GAM" = "gam"),
+                                  selected = "lm")
+               )
+             ),
+             fluidRow(
+               column(12,
+                      plotOutput("correlation_plot"),
+                      verbatimTextOutput("correlation_value")
+               )
+             )
+    ),
+    
+    
     # Prediction
     tabPanel("Rainfall Prediction",
              flowLayout(
@@ -111,7 +136,6 @@ ui <- fluidPage(
     ),
     theme = bs_theme(bootswatch = "superhero")
   ))
-
 
 
 server <- function(input, output) {
@@ -143,11 +167,9 @@ server <- function(input, output) {
     return(data_filtered)
   })
   
-  
   filteredData1 <- reactive({
-    
     merged_data %>%
-      filter(Year == input$year) 
+      filter(Year == input$year)
   })
   
   ### Page 3 output
@@ -166,7 +188,6 @@ server <- function(input, output) {
     print(p)
   })
   output$tempMap <- renderTmap({
-    
     selected_data <- merged_data[merged_data$Year == input$year & merged_data$Month == input$month, ]
     
     if(nrow(selected_data) == 0) {
@@ -176,15 +197,12 @@ server <- function(input, output) {
     selected_sf <- st_as_sf(selected_data, coords = c("Longitude", "Latitude"), crs = 4326, agr = "constant") %>%
       st_transform(crs = 3414)
     
-   
     mpsz2019 <- st_read(dsn = "data/geospatial", layer = "MPSZ-2019") %>%
       st_transform(crs = 3414)
-    
     
     if(any(!st_is_valid(mpsz2019))) {
       mpsz2019 <- st_make_valid(mpsz2019)
     }
-    
     
     pal <- colorNumeric(palette = "YlOrRd", domain = selected_sf$MonthlyAvgTemp)
     tmap_mode("view")
@@ -198,6 +216,7 @@ server <- function(input, output) {
     
     tm
   })
+  
   #page:cluster
   output$clusterPlot <- renderPlot({
     
@@ -206,19 +225,20 @@ server <- function(input, output) {
     clean_data <- na.omit(filtered_data)
     
     station_means <- aggregate(MonthlyAvgTemp ~ Station, clean_data, mean)
-
+    
     set.seed(123)
-
+    
     cluster_result <- kmeans(station_means$MonthlyAvgTemp, centers = input$selectedK)
- 
+    
     station_means$Cluster <- as.factor(cluster_result$cluster)
-
+    
     ggplot(station_means, aes(x = Station, y = MonthlyAvgTemp, color = Cluster)) +
       geom_point(size = 3) +
       theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
       labs(title = paste("Clustering Result (k =", input$selectedK, ")"),
            x = "Station", y = "Monthly Average Temperature", color = "Cluster")
   })
+  
   ### Page 4 plot output
   filtered_rain_data_monthly <- reactive({
     data %>%
@@ -285,6 +305,32 @@ server <- function(input, output) {
     tm
   })
   
+  # Correlation analysis
+  output$correlation_plot <- renderPlot({
+    x_var_name <- input$x_var
+    y_var_name <- input$y_var
+    smooth_method <- input$smooth_method
+    
+    correlation_plot <- ggplot(final_data, aes(x = !!sym(x_var_name), y = !!sym(y_var_name))) +
+      geom_point() +
+      geom_smooth(method = smooth_method, color = "skyblue", se = FALSE) +
+      labs(title = "Correlation Plot",
+           x = x_var_name,
+           y = y_var_name) +
+      theme_minimal()
+    
+    print(correlation_plot)
+  })
+  
+  output$correlation_value <- renderPrint({
+    x <- final_data[[input$x_var]]
+    y <- final_data[[input$y_var]]
+    
+    cor_value <- cor(x, y, method = "pearson")
+    
+    print(paste("Correlation value:", round(cor_value, 2)))
+  })
+  
   #time series plot
   output$predict_plot = renderPlot({
     data_filtered <- data %>%
@@ -311,7 +357,6 @@ server <- function(input, output) {
     
     forecast_result <- forecast(fit1, h = (input$predict_year - 2023) * 12)
     
-    # 选择置信区间
     if (input$ci_level == "90%") {
       ci_lower <- forecast_result$lower[, 1]
       ci_upper <- forecast_result$upper[, 1]
@@ -319,7 +364,6 @@ server <- function(input, output) {
       ci_lower <- forecast_result$lower[, 2]
       ci_upper <- forecast_result$upper[, 2]
     }
-    
     plot(rain_ts1,
          main = "Rainfall Forecast",
          ylab = "Average Rainfall",
@@ -331,16 +375,16 @@ server <- function(input, output) {
          lwd = 2
     )
     
-    if (input$show_forecast == "Yes") {
-      lines(forecast_result$mean, col = "green", lwd = 2)
-    }
-    
     if (input$show_ci == "Yes") {
       polygon(c(time(forecast_result$lower), rev(time(forecast_result$upper))),
               c(ci_lower, rev(ci_upper)),
-              col = "lightskyblue",
+              col = rgb(0.52, 0.81, 0.98, alpha = 0.3),  
               border = NA
       )
+    }
+    
+    if (input$show_forecast == "Yes") {
+      lines(forecast_result$mean, col = "green", lwd = 2)
     }
     
     legend_items <- c("Observed")
